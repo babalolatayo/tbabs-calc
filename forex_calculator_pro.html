@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Tbabs Calc</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0b0f1a;
+    --bg2:       #111827;
+    --bg3:       #1a2235;
+    --border:    #1e2d45;
+    --border2:   #263348;
+    --text:      #e2e8f4;
+    --text2:     #8b9ab5;
+    --text3:     #4a5a75;
+    --accent:    #00d4ff;
+    --accent2:   #0ea5e9;
+    --green:     #10d98a;
+    --green-bg:  rgba(16,217,138,0.10);
+    --amber:     #f5a623;
+    --amber-bg:  rgba(245,166,35,0.10);
+    --red:       #f04040;
+    --red-bg:    rgba(240,64,64,0.10);
+    --gold:      #fbbf24;
+    --radius:    12px;
+    --radius-sm: 8px;
+    --mono:      'IBM Plex Mono', monospace;
+    --display:   'Syne', sans-serif;
+  }
+
+  html { background: var(--bg); }
+
+  body {
+    font-family: var(--mono);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, #0b1628 0%, #0f1f38 50%, #091520 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 20px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header-inner { max-width: 700px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    box-shadow: 0 0 16px rgba(0,212,255,0.3);
+  }
+  .logo-text { font-family: var(--display); font-size: 17px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
+  .logo-sub { font-size: 10px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500; margin-top: 1px; }
+  .live-dot { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--green); letter-spacing: 0.08em; }
+  .live-dot::before {
+    content: '';
+    width: 7px; height: 7px;
+    background: var(--green);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── Main ── */
+  .main { max-width: 700px; margin: 0 auto; padding: 16px 14px 32px; }
+
+  /* ── Section headers ── */
+  .section-head {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--text3); margin-bottom: 10px; margin-top: 4px;
+  }
+  .section-head::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .card-accent { border-color: rgba(0,212,255,0.2); background: linear-gradient(135deg, #111827, #0f1d30); }
+
+  /* ── Pair selector ── */
+  .group-label {
+    font-size: 9px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--text3); margin: 12px 0 6px;
+  }
+  .group-label:first-child { margin-top: 0; }
+
+  .pair-tabs { display: flex; gap: 5px; flex-wrap: wrap; }
+
+  .pair-tab {
+    padding: 5px 12px;
+    font-size: 11px; font-weight: 600;
+    font-family: var(--mono);
+    border: 1px solid var(--border2);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+    letter-spacing: 0.02em;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .pair-tab:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,0.05); }
+  .pair-tab.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #000;
+    border-color: transparent;
+    box-shadow: 0 0 14px rgba(0,212,255,0.35);
+  }
+  .pair-tab[data-pair="XAUUSD"].active {
+    background: linear-gradient(135deg, var(--gold), #f59e0b);
+    box-shadow: 0 0 14px rgba(251,191,36,0.35);
+  }
+  .pair-tab[data-pair="XAUUSD"] { color: var(--gold); border-color: rgba(251,191,36,0.3); }
+  .pair-tab[data-pair="XAUUSD"]:hover { background: rgba(251,191,36,0.08); border-color: var(--gold); }
+
+  /* ── Selected pair display ── */
+  .pair-hero {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+  }
+  .pair-hero-name {
+    font-family: var(--display);
+    font-size: 26px; font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--accent) 0%, #60a5fa 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .pair-hero-name.gold-pair {
+    background: linear-gradient(135deg, var(--gold) 0%, #fde68a 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .direction-badge {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+    padding: 3px 10px; border-radius: 999px;
+    border: 1px solid var(--border2); color: var(--text2);
+  }
+
+  /* ── Fields ── */
+  .field-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .field { flex: 1; min-width: 120px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 10px; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 6px; font-weight: 600;
+  }
+  .field label .dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--text3);
+  }
+  .dot-entry { background: var(--accent) !important; }
+  .dot-sl    { background: var(--red)   !important; }
+  .dot-tp    { background: var(--green) !important; }
+
+  .field input, .field select {
+    width: 100%; height: 42px;
+    padding: 0 12px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    background: var(--bg3);
+    color: var(--text);
+    font-size: 14px; font-weight: 500;
+    font-family: var(--mono);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    -webkit-appearance: none;
+  }
+  .field input:focus, .field select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,212,255,0.12);
+  }
+  .field input.sl-input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(240,64,64,0.1); }
+  .field input.tp-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(16,217,138,0.1); }
+
+  .field select option { background: var(--bg2); }
+
+  /* ── Results grid ── */
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 380px) {
+    .results-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .metric {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .metric::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: var(--border2);
+    transition: background 0.3s;
+  }
+  .metric.highlight-green::before { background: var(--green); }
+  .metric.highlight-red::before   { background: var(--red); }
+  .metric.highlight-amber::before { background: var(--amber); }
+  .metric.highlight-blue::before  { background: var(--accent); }
+
+  .metric-label {
+    font-size: 9px; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    font-weight: 600; margin-bottom: 6px;
+  }
+  .metric-value {
+    font-size: 20px; font-weight: 600;
+    font-family: var(--mono);
+    color: var(--text); line-height: 1;
+  }
+  .metric-value.good  { color: var(--green); }
+  .metric-value.warn  { color: var(--amber); }
+  .metric-value.bad   { color: var(--red);   }
+
+  /* ── Verdict bar ── */
+  .verdict-bar {
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 12px; line-height: 1.5;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    flex-wrap: wrap;
+  }
+  .verdict-bar.good  { background: var(--green-bg); border: 1px solid rgba(16,217,138,0.2); }
+  .verdict-bar.warn  { background: var(--amber-bg); border: 1px solid rgba(245,166,35,0.2); }
+  .verdict-bar.bad   { background: var(--red-bg);   border: 1px solid rgba(240,64,64,0.2); }
+
+  .verdict-text { color: var(--text2); flex: 1; }
+  .verdict-badge {
+    font-size: 10px; font-weight: 700;
+    padding: 3px 10px; border-radius: 999px;
+    letter-spacing: 0.06em; white-space: nowrap;
+  }
+  .badge-good { background: rgba(16,217,138,0.2); color: var(--green); }
+  .badge-warn { background: rgba(245,166,35,0.2); color: var(--amber); }
+  .badge-bad  { background: rgba(240,64,64,0.2);  color: var(--red); }
+
+  /* ── Pip note ── */
+  .pip-note {
+    font-size: 10px; color: var(--text3);
+    margin-top: 10px; letter-spacing: 0.05em;
+  }
+
+  /* ── Conv row ── */
+  .conv-warning { font-size: 10px; color: var(--red); margin-top: 5px; display: none; }
+
+  /* ── Divider ── */
+  .divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+  /* ── Mobile number inputs ── */
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { opacity: 0.4; }
+
+  /* ── Responsive ── */
+  @media (max-width: 480px) {
+    .header { padding: 14px 16px 12px; }
+    .logo-text { font-size: 15px; }
+    .main { padding: 12px 10px 28px; }
+    .card { padding: 13px; }
+    .pair-hero-name { font-size: 22px; }
+    .metric-value { font-size: 18px; }
+    .field input, .field select { font-size: 15px; height: 44px; }
+    .pair-tab { padding: 6px 11px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">📈</div>
+      <div>
+        <div class="logo-text">Tbabs Calc</div>
+        <div class="logo-sub">Position Sizer</div>
+      </div>
+    </div>
+    <div class="live-dot">LIVE</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- PAIR SELECTOR -->
+  <div class="section-head">Currency Pair</div>
+  <div class="card">
+    <div class="group-label">Majors</div>
+    <div class="pair-tabs">
+      <button class="pair-tab active" data-pair="EURUSD">EUR/USD</button>
+      <button class="pair-tab" data-pair="GBPUSD">GBP/USD</button>
+      <button class="pair-tab" data-pair="USDJPY">USD/JPY</button>
+      <button class="pair-tab" data-pair="AUDUSD">AUD/USD</button>
+      <button class="pair-tab" data-pair="USDCAD">USD/CAD</button>
+      <button class="pair-tab" data-pair="NZDUSD">NZD/USD</button>
+      <button class="pair-tab" data-pair="XAUUSD">XAU/USD</button>
+    </div>
+
+    <div class="group-label">EUR Crosses</div>
+    <div class="pair-tabs">
+      <button class="pair-tab" data-pair="EURGBP">EUR/GBP</button>
+      <button class="pair-tab" data-pair="EURJPY">EUR/JPY</button>
+      <button class="pair-tab" data-pair="EURAUD">EUR/AUD</button>
+      <button class="pair-tab" data-pair="EURCAD">EUR/CAD</button>
+      <button class="pair-tab" data-pair="EURNZD">EUR/NZD</button>
+    </div>
+
+    <div class="group-label">AUD Crosses</div>
+    <div class="pair-tabs">
+      <button class="pair-tab" data-pair="AUDGBP">AUD/GBP</button>
+      <button class="pair-tab" data-pair="AUDCAD">AUD/CAD</button>
+      <button class="pair-tab" data-pair="AUDNZD">AUD/NZD</button>
+      <button class="pair-tab" data-pair="AUDJPY">AUD/JPY</button>
+      <button class="pair-tab" data-pair="AUDEUR">AUD/EUR</button>
+      <button class="pair-tab" data-pair="AUDCHF">AUD/CHF</button>
+    </div>
+
+    <div class="group-label">NZD Crosses</div>
+    <div class="pair-tabs">
+      <button class="pair-tab" data-pair="NZDJPY">NZD/JPY</button>
+      <button class="pair-tab" data-pair="NZDCAD">NZD/CAD</button>
+      <button class="pair-tab" data-pair="NZDAUD">NZD/AUD</button>
+      <button class="pair-tab" data-pair="NZDGBP">NZD/GBP</button>
+    </div>
+
+    <div class="group-label">JPY Crosses</div>
+    <div class="pair-tabs">
+      <button class="pair-tab" data-pair="GBPJPY">GBP/JPY</button>
+      <button class="pair-tab" data-pair="CADJPY">CAD/JPY</button>
+    </div>
+  </div>
+
+  <!-- TRADE PRICES -->
+  <div class="section-head">Trade Setup</div>
+  <div class="card card-accent">
+    <div class="pair-hero">
+      <div class="pair-hero-name" id="selectedPairLabel">EUR/USD</div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label><span class="dot dot-entry"></span>Entry</label>
+        <input type="number" id="entry" value="1.08500" step="0.00001">
+      </div>
+      <div class="field">
+        <label><span class="dot dot-sl"></span>Stop Loss</label>
+        <input type="number" id="sl" value="1.08300" step="0.00001" class="sl-input">
+      </div>
+      <div class="field">
+        <label><span class="dot dot-tp"></span>Take Profit</label>
+        <input type="number" id="tp" value="1.08900" step="0.00001" class="tp-input">
+      </div>
+    </div>
+  </div>
+
+  <!-- POSITION SIZING -->
+  <div class="section-head">Position Sizing</div>
+  <div class="card">
+    <div class="field-row">
+      <div class="field">
+        <label>Balance ($)</label>
+        <input type="number" id="balance" value="10000" step="100" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label>Risk (%)</label>
+        <input type="number" id="riskPct" value="1" step="0.1" min="0.1" max="100" inputmode="decimal">
+      </div>
+      <div class="field">
+        <label>Lot Type</label>
+        <select id="lotType">
+          <option value="100000">Standard</option>
+          <option value="10000">Mini</option>
+          <option value="1000">Micro</option>
+        </select>
+      </div>
+    </div>
+    <div id="convRow" style="display:none;">
+      <div class="divider" style="margin:8px 0 12px;"></div>
+      <div class="field">
+        <label id="convLabel">Conversion Rate</label>
+        <input type="number" id="convRate" value="1.2700" step="0.0001" inputmode="decimal">
+        <div class="conv-warning" id="convWarning">⚠ Enter a valid conversion rate for accurate lot sizing</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="section-head">Results</div>
+  <div class="card">
+    <div class="results-grid">
+      <div class="metric" id="m-slpips">
+        <div class="metric-label">SL Pips</div>
+        <div class="metric-value" id="slPips">—</div>
+      </div>
+      <div class="metric" id="m-tppips">
+        <div class="metric-label">TP Pips</div>
+        <div class="metric-value" id="tpPips">—</div>
+      </div>
+      <div class="metric" id="m-rr">
+        <div class="metric-label">Risk:Reward</div>
+        <div class="metric-value" id="rratio">—</div>
+      </div>
+      <div class="metric highlight-red" id="m-risk">
+        <div class="metric-label">$ At Risk</div>
+        <div class="metric-value" id="riskAmt">—</div>
+      </div>
+      <div class="metric highlight-green" id="m-profit">
+        <div class="metric-label">Pot. Profit</div>
+        <div class="metric-value good" id="profitAmt">—</div>
+      </div>
+      <div class="metric highlight-blue" id="m-lot">
+        <div class="metric-label">Lot Size</div>
+        <div class="metric-value" id="lotSizeOut">—</div>
+      </div>
+    </div>
+
+    <div class="verdict-bar warn" id="verdictBar">
+      <div class="verdict-text" id="verdictText">Enter your trade details above.</div>
+      <div class="verdict-badge badge-warn" id="verdictBadge">—</div>
+    </div>
+
+    <div class="pip-note" id="pipNote"></div>
+  </div>
+
+</div>
+
+<script>
+const PAIRS = {
+  EURUSD: { pipSize:0.0001, base:'EUR', quote:'USD' },
+  GBPUSD: { pipSize:0.0001, base:'GBP', quote:'USD' },
+  USDJPY: { pipSize:0.01,   base:'USD', quote:'JPY' },
+  AUDUSD: { pipSize:0.0001, base:'AUD', quote:'USD' },
+  USDCAD: { pipSize:0.0001, base:'USD', quote:'CAD' },
+  NZDUSD: { pipSize:0.0001, base:'NZD', quote:'USD' },
+  XAUUSD: { pipSize:0.01,   base:'XAU', quote:'USD', contract:100 },
+  EURGBP: { pipSize:0.0001, base:'EUR', quote:'GBP' },
+  EURJPY: { pipSize:0.01,   base:'EUR', quote:'JPY' },
+  EURAUD: { pipSize:0.0001, base:'EUR', quote:'AUD' },
+  EURCAD: { pipSize:0.0001, base:'EUR', quote:'CAD' },
+  EURNZD: { pipSize:0.0001, base:'EUR', quote:'NZD' },
+  AUDGBP: { pipSize:0.0001, base:'AUD', quote:'GBP' },
+  AUDCAD: { pipSize:0.0001, base:'AUD', quote:'CAD' },
+  AUDNZD: { pipSize:0.0001, base:'AUD', quote:'NZD' },
+  AUDJPY: { pipSize:0.01,   base:'AUD', quote:'JPY' },
+  AUDEUR: { pipSize:0.0001, base:'AUD', quote:'EUR' },
+  AUDCHF: { pipSize:0.0001, base:'AUD', quote:'CHF' },
+  NZDJPY: { pipSize:0.01,   base:'NZD', quote:'JPY' },
+  NZDCAD: { pipSize:0.0001, base:'NZD', quote:'CAD' },
+  NZDAUD: { pipSize:0.0001, base:'NZD', quote:'AUD' },
+  NZDGBP: { pipSize:0.0001, base:'NZD', quote:'GBP' },
+  GBPJPY: { pipSize:0.01,   base:'GBP', quote:'JPY' },
+  CADJPY: { pipSize:0.01,   base:'CAD', quote:'JPY' },
+};
+
+const DEFAULTS = {
+  EURUSD: ['1.08500','1.08300','1.08900','0.00001'],
+  GBPUSD: ['1.27000','1.26800','1.27400','0.00001'],
+  USDJPY: ['150.500','150.000','151.500','0.001'],
+  AUDUSD: ['0.65500','0.65300','0.65900','0.00001'],
+  USDCAD: ['1.36500','1.36300','1.36900','0.00001'],
+  NZDUSD: ['0.60500','0.60300','0.60900','0.00001'],
+  XAUUSD: ['2320.00','2305.00','2350.00','0.01'],
+  EURGBP: ['0.85500','0.85300','0.85900','0.00001'],
+  EURJPY: ['163.500','163.000','164.500','0.001'],
+  EURAUD: ['1.65000','1.64700','1.65600','0.00001'],
+  EURCAD: ['1.47000','1.46700','1.47600','0.00001'],
+  EURNZD: ['1.79000','1.78600','1.79800','0.00001'],
+  AUDGBP: ['0.51500','0.51300','0.51900','0.00001'],
+  AUDCAD: ['0.89500','0.89200','0.90100','0.00001'],
+  AUDNZD: ['1.08500','1.08200','1.09100','0.00001'],
+  AUDJPY: ['98.500','98.000','99.500','0.001'],
+  AUDEUR: ['0.60500','0.60300','0.60900','0.00001'],
+  AUDCHF: ['0.57500','0.57200','0.58000','0.00001'],
+  NZDJPY: ['91.500','91.000','92.500','0.001'],
+  NZDCAD: ['0.82000','0.81700','0.82600','0.00001'],
+  NZDAUD: ['0.92000','0.91700','0.92600','0.00001'],
+  NZDGBP: ['0.47500','0.47300','0.47900','0.00001'],
+  GBPJPY: ['191.500','191.000','192.500','0.001'],
+  CADJPY: ['110.500','110.000','111.500','0.001'],
+};
+
+const CONV_HINTS = {
+  EURGBP: { label:'GBP/USD rate', default:'1.2700' },
+  EURJPY: { label:'USD/JPY rate', default:'150.500' },
+  EURAUD: { label:'AUD/USD rate', default:'0.6550' },
+  EURCAD: { label:'USD/CAD rate', default:'1.3650' },
+  EURNZD: { label:'NZD/USD rate', default:'0.6050' },
+  USDCAD: { label:'USD/CAD rate', default:'1.3650' },
+  USDJPY: { label:'USD/JPY rate', default:'150.500' },
+  NZDJPY: { label:'USD/JPY rate', default:'150.500' },
+  NZDCAD: { label:'USD/CAD rate', default:'1.3650' },
+  NZDAUD: { label:'AUD/USD rate', default:'0.6550' },
+  NZDGBP: { label:'GBP/USD rate', default:'1.2700' },
+  AUDGBP: { label:'GBP/USD rate', default:'1.2700' },
+  AUDCAD: { label:'USD/CAD rate', default:'1.3650' },
+  AUDNZD: { label:'NZD/USD rate', default:'0.6050' },
+  AUDJPY: { label:'USD/JPY rate', default:'150.500' },
+  AUDEUR: { label:'EUR/USD rate', default:'1.0850' },
+  AUDCHF: { label:'USD/CHF rate', default:'0.9050' },
+  GBPJPY: { label:'USD/JPY rate', default:'150.500' },
+  CADJPY: { label:'USD/JPY rate', default:'150.500' },
+};
+
+let activePair = 'EURUSD';
+
+document.querySelectorAll('.pair-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.pair-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activePair = btn.dataset.pair;
+    updateDefaults();
+    calc();
+  });
+});
+
+function updateDefaults() {
+  const d = DEFAULTS[activePair] || DEFAULTS['EURUSD'];
+  ['entry','sl','tp'].forEach((id,i) => {
+    document.getElementById(id).value = d[i];
+    document.getElementById(id).step = d[3];
+  });
+
+  const p = PAIRS[activePair];
+  const label = document.getElementById('selectedPairLabel');
+  label.textContent = p.base + '/' + p.quote;
+  label.className = 'pair-hero-name' + (activePair === 'XAUUSD' ? ' gold-pair' : '');
+
+  const convRow = document.getElementById('convRow');
+  const hint = CONV_HINTS[activePair];
+  if (hint) {
+    convRow.style.display = 'block';
+    document.getElementById('convLabel').textContent = hint.label + ' (for lot sizing)';
+    document.getElementById('convRate').value = hint.default;
+    document.getElementById('convWarning').style.display = 'none';
+  } else {
+    convRow.style.display = 'none';
+  }
+}
+
+function getPipValueUSD(pair, convRate) {
+  const cfg = PAIRS[pair];
+  const contract = cfg.contract || 100000;
+  const pip = cfg.pipSize;
+  const quote = cfg.quote;
+
+  if (quote === 'USD') return pip * contract;
+  if (quote === 'JPY') return (pip * contract) / convRate;
+  if (quote === 'GBP') return pip * contract * convRate;
+  if (quote === 'AUD') return pip * contract * convRate;
+  if (quote === 'NZD') return pip * contract * convRate;
+  if (quote === 'CAD') return (pip * contract) / convRate;
+  if (quote === 'EUR') return pip * contract * convRate;
+  if (quote === 'CHF') return (pip * contract) / convRate;
+  return pip * contract;
+}
+
+function calc() {
+  const entry    = parseFloat(document.getElementById('entry').value);
+  const sl       = parseFloat(document.getElementById('sl').value);
+  const tp       = parseFloat(document.getElementById('tp').value);
+  const balance  = parseFloat(document.getElementById('balance').value);
+  const riskPct  = parseFloat(document.getElementById('riskPct').value);
+  const lotUnits = parseInt(document.getElementById('lotType').value);
+  const convRateRaw = parseFloat(document.getElementById('convRate').value);
+
+  if ([entry, sl, tp, balance, riskPct].some(isNaN)) return;
+
+  const needsConv = !!CONV_HINTS[activePair];
+  const convWarning = document.getElementById('convWarning');
+  if (needsConv && (isNaN(convRateRaw) || convRateRaw <= 0)) {
+    if (convWarning) convWarning.style.display = 'block';
+    return;
+  }
+  if (convWarning) convWarning.style.display = 'none';
+  const convRate = (needsConv && !isNaN(convRateRaw) && convRateRaw > 0) ? convRateRaw : 1;
+
+  const cfg = PAIRS[activePair];
+  const pip = cfg.pipSize;
+
+  const slPips  = Math.round(Math.abs(entry - sl) / pip * 10) / 10;
+  const tpPips  = Math.round(Math.abs(tp - entry) / pip * 10) / 10;
+  const riskAmt = Math.round(balance * riskPct / 100 * 100) / 100;
+  const rr      = slPips > 0 ? Math.round(tpPips / slPips * 100) / 100 : 0;
+  const profit  = Math.round(riskAmt * rr * 100) / 100;
+
+  const pipValStd    = getPipValueUSD(activePair, convRate);
+  const pipValScaled = pipValStd * (lotUnits / 100000);
+  const lotSize      = slPips > 0 ? Math.round((riskAmt / (slPips * pipValScaled)) * 100) / 100 : 0;
+
+  document.getElementById('slPips').textContent    = slPips.toFixed(1);
+  document.getElementById('tpPips').textContent    = tpPips.toFixed(1);
+  document.getElementById('riskAmt').textContent   = '$' + riskAmt.toFixed(2);
+  document.getElementById('profitAmt').textContent = '$' + profit.toFixed(2);
+  document.getElementById('lotSizeOut').textContent= lotSize.toFixed(2);
+  document.getElementById('pipNote').textContent   = '● Pip value: $' + pipValStd.toFixed(2) + ' per standard lot';
+
+  const rrEl = document.getElementById('rratio');
+  rrEl.textContent = '1:' + rr.toFixed(2);
+  const rrClass = rr >= 2 ? 'good' : rr >= 1 ? 'warn' : 'bad';
+  rrEl.className = 'metric-value ' + rrClass;
+
+  // R:R metric highlight
+  const mRR = document.getElementById('m-rr');
+  mRR.className = 'metric ' + (rr >= 2 ? 'highlight-green' : rr >= 1 ? 'highlight-amber' : 'highlight-red');
+
+  // Verdict
+  const bar   = document.getElementById('verdictBar');
+  const txt   = document.getElementById('verdictText');
+  const badge = document.getElementById('verdictBadge');
+  if (rr >= 3) {
+    bar.className = 'verdict-bar good';
+    badge.className = 'verdict-badge badge-good';
+    badge.textContent = 'Excellent';
+    txt.textContent = 'Strong R:R — every $1 risked could return $' + rr.toFixed(2) + '.';
+  } else if (rr >= 2) {
+    bar.className = 'verdict-bar good';
+    badge.className = 'verdict-badge badge-good';
+    badge.textContent = 'Good Setup';
+    txt.textContent = 'Solid 1:' + rr.toFixed(2) + ' ratio. Pro traders target 1:2 minimum.';
+  } else if (rr >= 1) {
+    bar.className = 'verdict-bar warn';
+    badge.className = 'verdict-badge badge-warn';
+    badge.textContent = 'Marginal';
+    txt.textContent = 'Below 1:2. Consider widening TP or tightening SL.';
+  } else {
+    bar.className = 'verdict-bar bad';
+    badge.className = 'verdict-badge badge-bad';
+    badge.textContent = 'Poor Setup';
+    txt.textContent = 'Risking more than you stand to gain. Move TP further or SL closer.';
+  }
+}
+
+['entry','sl','tp','balance','riskPct','lotType','convRate'].forEach(id => {
+  document.getElementById(id).addEventListener('input', calc);
+});
+
+calc();
+</script>
+</body>
+</html>
