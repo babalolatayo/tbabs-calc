@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Tbabs TA</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:       #0b0f1a;
+    --bg2:      #111827;
+    --bg3:      #1a2235;
+    --border:   #1e2d45;
+    --border2:  #263348;
+    --text:     #e2e8f4;
+    --text2:    #8b9ab5;
+    --text3:    #4a5a75;
+    --accent:   #00d4ff;
+    --green:    #10d98a;
+    --amber:    #f5a623;
+    --red:      #f04040;
+    --neutral:  #8b9ab5;
+    --mono:     'Courier New', Courier, monospace;
+    --display:  system-ui, -apple-system, sans-serif;
+    --radius:   12px;
+    --radius-sm:8px;
+  }
+  html, body { background: var(--bg); color: var(--text); font-family: var(--mono); min-height: 100vh; }
+
+  .header {
+    background: linear-gradient(135deg, #0b1628, #0f1f38, #091520);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 18px;
+    position: sticky; top: 0; z-index: 20;
+  }
+  .header-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg, var(--accent), #0ea5e9); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; box-shadow: 0 0 14px rgba(0,212,255,0.3); }
+  .logo-text { font-family: var(--display); font-size: 17px; font-weight: 800; color: var(--text); letter-spacing: -0.01em; }
+  .logo-sub  { font-size: 9px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; }
+  .live-dot  { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--green); letter-spacing: 0.08em; }
+  .live-dot::before { content:''; width:7px; height:7px; background:var(--green); border-radius:50%; box-shadow:0 0 8px var(--green); animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.35} }
+
+  .main { max-width: 900px; margin: 0 auto; padding: 16px 14px 32px; }
+
+  .section-head { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text3); margin: 16px 0 10px; }
+  .section-head::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  .tf-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .tf-btn {
+    padding: 6px 14px; font-size: 11px; font-weight: 600;
+    font-family: var(--mono); letter-spacing: 0.05em;
+    border: 1px solid var(--border2); border-radius: 999px;
+    background: transparent; color: var(--text2); cursor: pointer;
+    transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .tf-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .tf-btn.active { background: linear-gradient(135deg, var(--accent), #0ea5e9); color: #000; border-color: transparent; box-shadow: 0 0 12px rgba(0,212,255,0.3); }
+
+  .pair-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+
+  .pair-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px;
+    position: relative; overflow: hidden;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .pair-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background: var(--border2); transition: background 0.4s; }
+  .pair-card.strong-buy::before   { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .pair-card.buy::before          { background: #5eead4; }
+  .pair-card.neutral::before      { background: var(--text3); }
+  .pair-card.sell::before         { background: #f97316; }
+  .pair-card.strong-sell::before  { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+  .pair-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .pair-name { font-family: var(--display); font-size: 17px; font-weight: 800; color: var(--text); }
+  .signal-pill { font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 999px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .pill-strong-buy  { background: rgba(16,217,138,0.18); color: var(--green); }
+  .pill-buy         { background: rgba(94,234,212,0.15); color: #5eead4; }
+  .pill-neutral     { background: rgba(139,154,181,0.15); color: var(--neutral); }
+  .pill-sell        { background: rgba(249,115,22,0.15); color: #f97316; }
+  .pill-strong-sell { background: rgba(240,64,64,0.18); color: var(--red); }
+  .pill-loading     { background: rgba(0,212,255,0.1); color: var(--accent); }
+  .pill-error       { background: rgba(240,64,64,0.1); color: var(--red); }
+
+  .indicators { display: flex; flex-direction: column; gap: 5px; }
+  .ind-row { display: flex; align-items: center; gap: 8px; font-size: 10px; }
+  .ind-name { color: var(--text3); width: 60px; flex-shrink: 0; }
+  .ind-bar-wrap { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .ind-bar { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+  .bar-buy     { background: var(--green); }
+  .bar-neutral { background: var(--text3); }
+  .bar-sell    { background: var(--red); }
+  .ind-signal { width: 55px; text-align: right; font-weight: 600; font-size: 9px; letter-spacing: 0.05em; }
+  .sig-buy     { color: var(--green); }
+  .sig-neutral { color: var(--text3); }
+  .sig-sell    { color: var(--red); }
+
+  .summary-row { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .summary-item { flex: 1; text-align: center; }
+  .summary-label { font-size: 8px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 3px; }
+  .summary-count { font-size: 14px; font-weight: 600; }
+  .count-buy  { color: var(--green); }
+  .count-neu  { color: var(--text3); }
+  .count-sell { color: var(--red); }
+
+  .skeleton { background: linear-gradient(90deg, var(--bg3) 25%, var(--border) 50%, var(--bg3) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
+  @keyframes shimmer { 0%{background-position:200% 0}100%{background-position:-200% 0} }
+
+  .bottom-bar { display: flex; flex-direction: column; align-items: center; margin-top: 18px; gap: 8px; }
+  .refresh-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 22px; background: transparent;
+    border: 1px solid var(--border2); border-radius: 999px;
+    color: var(--text2); font-family: var(--mono); font-size: 11px;
+    cursor: pointer; transition: all 0.15s; touch-action: manipulation;
+  }
+  .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .refresh-btn.spinning .spin { display: inline-block; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .last-update { font-size: 10px; color: var(--text3); }
+
+  .error-hint {
+    background: rgba(240,64,64,0.08); border: 1px solid rgba(240,64,64,0.2);
+    border-radius: var(--radius-sm); padding: 10px 14px;
+    font-size: 11px; color: var(--text2); line-height: 1.6;
+    margin-bottom: 14px; display: none;
+  }
+
+  @media (max-width: 480px) {
+    .pair-grid { grid-template-columns: 1fr; }
+    .header { padding: 12px 14px; }
+    .tf-btn { padding: 7px 13px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">📊</div>
+      <div>
+        <div class="logo-text">Tbabs TA</div>
+        <div class="logo-sub">Technical Analysis</div>
+      </div>
+    </div>
+    <div class="live-dot">LIVE</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="section-head">Timeframe</div>
+  <div class="tf-row">
+    <button class="tf-btn active" data-tf="5min">M5</button>
+    <button class="tf-btn" data-tf="15min">M15</button>
+    <button class="tf-btn" data-tf="30min">M30</button>
+    <button class="tf-btn" data-tf="1h">H1</button>
+    <button class="tf-btn" data-tf="4h">H4</button>
+    <button class="tf-btn" data-tf="1day">D1</button>
+  </div>
+
+  <div class="error-hint" id="errorHint">
+    ⚠️ Some pairs failed to load. This usually means the <strong>free API rate limit</strong> was hit (8 calls/min on free tier).
+    Wait 60 seconds and tap <strong>Refresh All</strong> — or upgrade your TwelveData plan for faster refreshes.
+  </div>
+
+  <div class="section-head">Major Pairs</div>
+  <div class="pair-grid" id="pairGrid"></div>
+
+  <div class="bottom-bar">
+    <button class="refresh-btn" id="refreshBtn" onclick="refreshAll()">
+      <span class="spin">↻</span> Refresh All
+    </button>
+    <div class="last-update" id="lastUpdate"></div>
+  </div>
+</div>
+
+<script>
+const API_KEY = 'ab96b39d57894e4989b8746a06eef705';
+
+const PAIRS = [
+  { symbol:'EUR/USD', id:'EURUSD' },
+  { symbol:'GBP/USD', id:'GBPUSD' },
+  { symbol:'USD/JPY', id:'USDJPY' },
+  { symbol:'AUD/USD', id:'AUDUSD' },
+  { symbol:'USD/CAD', id:'USDCAD' },
+  { symbol:'NZD/USD', id:'NZDUSD' },
+  { symbol:'USD/CHF', id:'USDCHF' },
+  { symbol:'XAU/USD', id:'XAUUSD' },
+];
+
+const INDICATORS = [
+  { key:'rsi',   name:'RSI',   endpoint:'rsi',   params:'&time_period=14' },
+  { key:'macd',  name:'MACD',  endpoint:'macd',  params:'&fast_period=12&slow_period=26&signal_period=9' },
+  { key:'ema20', name:'EMA20', endpoint:'ema',   params:'&time_period=20' },
+  { key:'ema50', name:'EMA50', endpoint:'ema',   params:'&time_period=50' },
+  { key:'stoch', name:'Stoch', endpoint:'stoch', params:'&fast_k_period=14&slow_d_period=3' },
+];
+
+let activeTF = '5min';
+let errorCount = 0;
+
+document.querySelectorAll('.tf-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeTF = btn.dataset.tf;
+    refreshAll();
+  });
+});
+
+function buildGrid() {
+  const grid = document.getElementById('pairGrid');
+  grid.innerHTML = '';
+  errorCount = 0;
+  document.getElementById('errorHint').style.display = 'none';
+
+  PAIRS.forEach(p => {
+    grid.innerHTML += `
+      <div class="pair-card" id="card-${p.id}">
+        <div class="pair-card-top">
+          <div class="pair-name">${p.symbol}</div>
+          <div class="signal-pill pill-loading" id="pill-${p.id}">Loading…</div>
+        </div>
+        <div class="indicators" id="inds-${p.id}">
+          ${INDICATORS.map((ind, idx) => `
+            <div class="ind-row">
+              <div class="ind-name">${ind.name}</div>
+              <div class="ind-bar-wrap"><div class="ind-bar skeleton" id="bar-${p.id}-${ind.key}" style="width:60%"></div></div>
+              <div class="ind-signal" id="sig-${p.id}-${ind.key}">—</div>
+            </div>`).join('')}
+        </div>
+        <div class="summary-row">
+          <div class="summary-item">
+            <div class="summary-label">Buy</div>
+            <div class="summary-count count-buy" id="cnt-buy-${p.id}">—</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Neutral</div>
+            <div class="summary-count count-neu" id="cnt-neu-${p.id}">—</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Sell</div>
+            <div class="summary-count count-sell" id="cnt-sell-${p.id}">—</div>
+          </div>
+        </div>
+      </div>`;
+  });
+}
+
+async function fetchIndicator(symbol, indicator, tf) {
+  const url = `https://api.twelvedata.com/${indicator.endpoint}?symbol=${encodeURIComponent(symbol)}&interval=${tf}${indicator.params}&outputsize=2&apikey=${API_KEY}`;
+  const r = await fetch(url);
+  return r.json();
+}
+
+function interpretRSI(val) {
+  const v = parseFloat(val);
+  if (isNaN(v)) return 'neutral';
+  if (v >= 70) return 'sell';
+  if (v <= 30) return 'buy';
+  if (v > 55)  return 'sell';
+  if (v < 45)  return 'buy';
+  return 'neutral';
+}
+
+function interpretMACD(data) {
+  const macd   = parseFloat(data?.values?.[0]?.macd);
+  const signal = parseFloat(data?.values?.[0]?.macd_signal);
+  if (isNaN(macd) || isNaN(signal)) return 'neutral';
+  return macd > signal ? 'buy' : macd < signal ? 'sell' : 'neutral';
+}
+
+function interpretEMA(data, price) {
+  const ema = parseFloat(data?.values?.[0]?.ema);
+  const p   = parseFloat(price);
+  if (isNaN(ema) || isNaN(p)) return 'neutral';
+  return p > ema ? 'buy' : p < ema ? 'sell' : 'neutral';
+}
+
+function interpretStoch(data) {
+  const k = parseFloat(data?.values?.[0]?.slow_k);
+  const d = parseFloat(data?.values?.[0]?.slow_d);
+  if (isNaN(k) || isNaN(d)) return 'neutral';
+  if (k > 80) return 'sell';
+  if (k < 20) return 'buy';
+  return k > d ? 'buy' : k < d ? 'sell' : 'neutral';
+}
+
+function updateCard(pair, signals) {
+  let buys = 0, sells = 0, neutrals = 0;
+
+  signals.forEach(s => {
+    const sigEl = document.getElementById(`sig-${pair.id}-${s.key}`);
+    const barEl = document.getElementById(`bar-${pair.id}-${s.key}`);
+    if (sigEl) {
+      sigEl.textContent = s.signal === 'buy' ? 'Buy' : s.signal === 'sell' ? 'Sell' : 'Neutral';
+      sigEl.className = `ind-signal sig-${s.signal}`;
+    }
+    if (barEl) {
+      barEl.classList.remove('skeleton');
+      barEl.className = `ind-bar bar-${s.signal}`;
+      barEl.style.width = s.signal === 'buy' ? '82%' : s.signal === 'sell' ? '18%' : '50%';
+    }
+    if (s.signal === 'buy') buys++;
+    else if (s.signal === 'sell') sells++;
+    else neutrals++;
+  });
+
+  document.getElementById(`cnt-buy-${pair.id}`).textContent  = buys;
+  document.getElementById(`cnt-neu-${pair.id}`).textContent  = neutrals;
+  document.getElementById(`cnt-sell-${pair.id}`).textContent = sells;
+
+  const card = document.getElementById(`card-${pair.id}`);
+  const pill = document.getElementById(`pill-${pair.id}`);
+  card.className = 'pair-card';
+
+  let overall, pillClass, cardClass;
+  if      (buys >= 4)  { overall='Strong Buy';  pillClass='pill-strong-buy';  cardClass='strong-buy';  }
+  else if (buys >= 3)  { overall='Buy';          pillClass='pill-buy';         cardClass='buy';         }
+  else if (sells >= 4) { overall='Strong Sell';  pillClass='pill-strong-sell'; cardClass='strong-sell'; }
+  else if (sells >= 3) { overall='Sell';         pillClass='pill-sell';        cardClass='sell';        }
+  else                 { overall='Neutral';       pillClass='pill-neutral';     cardClass='neutral';     }
+
+  card.classList.add(cardClass);
+  pill.textContent = overall;
+  pill.className = `signal-pill ${pillClass}`;
+}
+
+async function loadPair(pair) {
+  try {
+    const priceUrl = `https://api.twelvedata.com/price?symbol=${encodeURIComponent(pair.symbol)}&apikey=${API_KEY}`;
+    const [priceRes, rsiRes, macdRes, ema20Res, ema50Res, stochRes] = await Promise.all([
+      fetch(priceUrl).then(r => r.json()),
+      fetchIndicator(pair.symbol, INDICATORS[0], activeTF),
+      fetchIndicator(pair.symbol, INDICATORS[1], activeTF),
+      fetchIndicator(pair.symbol, INDICATORS[2], activeTF),
+      fetchIndicator(pair.symbol, INDICATORS[3], activeTF),
+      fetchIndicator(pair.symbol, INDICATORS[4], activeTF),
+    ]);
+
+    // Check for API errors
+    if (priceRes.status === 'error' || rsiRes.status === 'error') {
+      throw new Error(priceRes.message || rsiRes.message || 'API error');
+    }
+
+    const price = priceRes?.price;
+    const signals = [
+      { key:'rsi',   signal: interpretRSI(rsiRes?.values?.[0]?.rsi) },
+      { key:'macd',  signal: interpretMACD(macdRes) },
+      { key:'ema20', signal: interpretEMA(ema20Res, price) },
+      { key:'ema50', signal: interpretEMA(ema50Res, price) },
+      { key:'stoch', signal: interpretStoch(stochRes) },
+    ];
+
+    updateCard(pair, signals);
+
+  } catch(e) {
+    errorCount++;
+    const pill = document.getElementById(`pill-${pair.id}`);
+    if (pill) { pill.textContent = 'Error'; pill.className = 'signal-pill pill-error'; }
+    if (errorCount >= 2) document.getElementById('errorHint').style.display = 'block';
+  }
+}
+
+async function refreshAll() {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  buildGrid();
+
+  // Stagger requests to respect free tier rate limit (8 req/min)
+  for (let i = 0; i < PAIRS.length; i++) {
+    loadPair(PAIRS[i]);
+    if (i < PAIRS.length - 1) await new Promise(r => setTimeout(r, 800));
+  }
+
+  btn.classList.remove('spinning');
+  const now = new Date();
+  document.getElementById('lastUpdate').textContent =
+    `Last updated: ${now.toLocaleTimeString()} · ${activeTF.toUpperCase()} timeframe`;
+}
+
+// Auto refresh every 60 seconds
+setInterval(refreshAll, 60000);
+
+// Initial load
+buildGrid();
+refreshAll();
+</script>
+</body>
+</html>
