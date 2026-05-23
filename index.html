@@ -374,6 +374,12 @@ html, body {
       <button class="pair-tab" data-pair="GBPJPY">GBP/JPY</button>
       <button class="pair-tab" data-pair="CADJPY">CAD/JPY</button>
     </div>
+    <div class="group-label">Indices</div>
+    <div class="pair-tabs">
+      <button class="pair-tab" data-pair="NAS100">NAS 100</button>
+      <button class="pair-tab" data-pair="UK100">UK 100</button>
+      <button class="pair-tab" data-pair="US500">US 500</button>
+    </div>
   </div>
 
   <div class="section-head">Trade Setup</div>
@@ -382,24 +388,32 @@ html, body {
       <div class="pair-hero-name" id="selectedPairLabel">EUR/USD</div>
     </div>
     <div class="field-row">
-      <div class="field"><label><span class="dot dot-entry"></span>Entry</label><input type="number" id="entry" value="1.08500" step="0.00001"></div>
-      <div class="field"><label><span class="dot dot-sl"></span>Stop Loss</label><input type="number" id="sl" value="1.08300" step="0.00001" class="sl-input"></div>
-      <div class="field"><label><span class="dot dot-tp"></span>Take Profit</label><input type="number" id="tp" value="1.08900" step="0.00001" class="tp-input"></div>
-    </div>
-  </div>
-
-  <div class="section-head">Position Sizing</div>
-  <div class="card">
-    <div class="field-row">
-      <div class="field"><label>Balance ($)</label><input type="number" id="balance" value="10000" step="100" inputmode="numeric"></div>
-      <div class="field"><label>Risk (%)</label><input type="number" id="riskPct" value="1" step="0.1" min="0.1" max="100" inputmode="decimal"></div>
       <div class="field">
-        <label>Lot Type</label>
-        <select id="lotType">
-          <option value="100000">Standard</option>
-          <option value="10000">Mini</option>
-          <option value="1000">Micro</option>
+        <label>Account Currency</label>
+        <select id="accountCcy">
+          <option value="USD">USD</option>
+          <option value="GBP">GBP</option>
+          <option value="EUR">EUR</option>
+          <option value="AUD">AUD</option>
+          <option value="CAD">CAD</option>
+          <option value="JPY">JPY</option>
+          <option value="NZD">NZD</option>
+          <option value="CHF">CHF</option>
         </select>
+      </div>
+      <div class="field">
+        <label>Account Balance</label>
+        <input type="number" id="balance" value="10000" step="100" inputmode="numeric">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Risk %</label>
+        <input type="number" id="riskPct" value="1" step="0.1" min="0.1" max="100" inputmode="decimal">
+      </div>
+      <div class="field">
+        <label>Stop Loss (pips)</label>
+        <input type="number" id="slPipsInput" value="20" step="1" min="1" inputmode="numeric">
       </div>
     </div>
     <div id="convRow" style="display:none;">
@@ -414,17 +428,11 @@ html, body {
 
   <div class="section-head">Results</div>
   <div class="card">
-    <div class="results-grid">
-      <div class="metric" id="m-slpips"><div class="metric-label">SL Pips</div><div class="metric-value" id="slPips">—</div></div>
-      <div class="metric" id="m-tppips"><div class="metric-label">TP Pips</div><div class="metric-value" id="tpPips">—</div></div>
-      <div class="metric" id="m-rr"><div class="metric-label">Risk:Reward</div><div class="metric-value" id="rratio">—</div></div>
+    <div class="results-grid" style="grid-template-columns:repeat(2,1fr);">
       <div class="metric highlight-red"><div class="metric-label">$ At Risk</div><div class="metric-value" id="riskAmt">—</div></div>
-      <div class="metric highlight-green"><div class="metric-label">Pot. Profit</div><div class="metric-value good" id="profitAmt">—</div></div>
       <div class="metric highlight-blue"><div class="metric-label">Lot Size</div><div class="metric-value" id="lotSizeOut">—</div></div>
-    </div>
-    <div class="verdict-bar warn" id="verdictBar">
-      <div class="verdict-text" id="verdictText">Enter your trade details above.</div>
-      <div class="verdict-badge badge-warn" id="verdictBadge">—</div>
+      <div class="metric"><div class="metric-label">SL Pips</div><div class="metric-value" id="slPips">—</div></div>
+      <div class="metric"><div class="metric-label">Pip Value</div><div class="metric-value" id="pipValOut">—</div></div>
     </div>
     <div class="pip-note" id="pipNote"></div>
   </div>
@@ -629,6 +637,10 @@ const CALC_PAIRS = {
   NZDJPY:{pipSize:0.01,base:'NZD',quote:'JPY'},NZDCAD:{pipSize:0.0001,base:'NZD',quote:'CAD'},
   NZDAUD:{pipSize:0.0001,base:'NZD',quote:'AUD'},NZDGBP:{pipSize:0.0001,base:'NZD',quote:'GBP'},
   GBPJPY:{pipSize:0.01,base:'GBP',quote:'JPY'},CADJPY:{pipSize:0.01,base:'CAD',quote:'JPY'},
+  // Indices — pip size = 1 point, contract = 1 unit, quote = USD/GBP
+  NAS100:{pipSize:1, base:'NAS100',quote:'USD', contract:1, isIndex:true},
+  UK100: {pipSize:1, base:'UK100', quote:'GBP', contract:1, isIndex:true},
+  US500: {pipSize:1, base:'US500', quote:'USD', contract:1, isIndex:true},
 };
 const DEFAULTS = {
   EURUSD:['1.08500','1.08300','1.08900','0.00001'],GBPUSD:['1.27000','1.26800','1.27400','0.00001'],
@@ -655,6 +667,7 @@ const CONV_HINTS = {
   AUDJPY:{label:'USD/JPY rate',default:'150.500'},AUDEUR:{label:'EUR/USD rate',default:'1.0850'},
   AUDCHF:{label:'USD/CHF rate',default:'0.9050'},GBPJPY:{label:'USD/JPY rate',default:'150.500'},
   CADJPY:{label:'USD/JPY rate',default:'150.500'},
+  UK100:{label:'GBP/USD rate',default:'1.2700'},
 };
 
 let activePair = 'EURUSD';
@@ -669,12 +682,19 @@ document.querySelectorAll('.pair-tab').forEach(btn => {
 });
 
 function updateDefaults() {
-  const d = DEFAULTS[activePair] || DEFAULTS['EURUSD'];
-  ['entry','sl','tp'].forEach((id,i) => { document.getElementById(id).value=d[i]; document.getElementById(id).step=d[3]; });
   const p = CALC_PAIRS[activePair];
   const label = document.getElementById('selectedPairLabel');
-  label.textContent = p.base+'/'+p.quote;
-  label.className = 'pair-hero-name'+(activePair==='XAUUSD'?' gold-pair':'');
+  const isIndex = p.isIndex;
+  label.textContent = isIndex ? p.base : p.base+'/'+p.quote;
+  label.className = 'pair-hero-name'+(activePair==='XAUUSD'?' gold-pair':isIndex?' gold-pair':'');
+  // Update SL label for indices vs forex
+  const slLabel = document.querySelector('label[for-sl]');
+  const slInput = document.getElementById('slPipsInput');
+  if(slInput) slInput.placeholder = isIndex ? 'e.g. 50' : 'e.g. 20';
+  updateConvRow();
+}
+
+function updateConvRow() {
   const hint = CONV_HINTS[activePair];
   const convRow = document.getElementById('convRow');
   if (hint) {
@@ -685,275 +705,29 @@ function updateDefaults() {
   } else { convRow.style.display='none'; }
 }
 
-function getPipValueUSD(pair, convRate) {
-  const cfg=CALC_PAIRS[pair]; const contract=cfg.contract||100000; const pip=cfg.pipSize; const q=cfg.quote;
-  if(q==='USD') return pip*contract;
-  if(q==='JPY') return (pip*contract)/convRate;
-  if(q==='GBP'||q==='AUD'||q==='NZD'||q==='EUR') return pip*contract*convRate;
-  if(q==='CAD'||q==='CHF') return (pip*contract)/convRate;
-  return pip*contract;
-}
+// Pip value in account currency per standard lot
+function getPipValueInAcctCcy(pair, convRate, acctCcy) {
+  const cfg = CALC_PAIRS[pair];
+  const contract = cfg.contract || 100000;
+  const pip = cfg.pipSize;
+  const quote = cfg.quote;
 
-function calc() {
-  const entry=parseFloat(document.getElementById('entry').value);
-  const sl=parseFloat(document.getElementById('sl').value);
-  const tp=parseFloat(document.getElementById('tp').value);
-  const balance=parseFloat(document.getElementById('balance').value);
-  const riskPct=parseFloat(document.getElementById('riskPct').value);
-  const lotUnits=parseInt(document.getElementById('lotType').value);
-  const convRateRaw=parseFloat(document.getElementById('convRate').value);
-  if([entry,sl,tp,balance,riskPct].some(isNaN)) return;
-  const needsConv=!!CONV_HINTS[activePair];
-  const cw=document.getElementById('convWarning');
-  if(needsConv&&(isNaN(convRateRaw)||convRateRaw<=0)){cw.style.display='block';return;}
-  cw.style.display='none';
-  const convRate=(needsConv&&!isNaN(convRateRaw)&&convRateRaw>0)?convRateRaw:1;
-  const pip=CALC_PAIRS[activePair].pipSize;
-  const slPips=Math.round(Math.abs(entry-sl)/pip*10)/10;
-  const tpPips=Math.round(Math.abs(tp-entry)/pip*10)/10;
-  const riskAmt=Math.round(balance*riskPct/100*100)/100;
-  const rr=slPips>0?Math.round(tpPips/slPips*100)/100:0;
-  const profit=Math.round(riskAmt*rr*100)/100;
-  const pipValStd=getPipValueUSD(activePair,convRate);
-  const pipValScaled=pipValStd*(lotUnits/100000);
-  const lotSize=slPips>0?Math.round((riskAmt/(slPips*pipValScaled))*100)/100:0;
-  document.getElementById('slPips').textContent=slPips.toFixed(1);
-  document.getElementById('tpPips').textContent=tpPips.toFixed(1);
-  document.getElementById('riskAmt').textContent='$'+riskAmt.toFixed(2);
-  document.getElementById('profitAmt').textContent='$'+profit.toFixed(2);
-  document.getElementById('lotSizeOut').textContent=lotSize.toFixed(2);
-  document.getElementById('pipNote').textContent='● Pip value: $'+pipValStd.toFixed(2)+' per standard lot';
-  const rrEl=document.getElementById('rratio');
-  rrEl.textContent='1:'+rr.toFixed(2);
-  rrEl.className='metric-value '+(rr>=2?'good':rr>=1?'warn':'bad');
-  document.getElementById('m-rr').className='metric '+(rr>=2?'highlight-green':rr>=1?'highlight-amber':'highlight-red');
-  const bar=document.getElementById('verdictBar'),txt=document.getElementById('verdictText'),badge=document.getElementById('verdictBadge');
-  if(rr>=3){bar.className='verdict-bar good';badge.className='verdict-badge badge-good';badge.textContent='Excellent';txt.textContent='Strong R:R — every $1 risked could return $'+rr.toFixed(2)+'.';}
-  else if(rr>=2){bar.className='verdict-bar good';badge.className='verdict-badge badge-good';badge.textContent='Good Setup';txt.textContent='Solid 1:'+rr.toFixed(2)+' ratio. Pro traders target 1:2 minimum.';}
-  else if(rr>=1){bar.className='verdict-bar warn';badge.className='verdict-badge badge-warn';badge.textContent='Marginal';txt.textContent='Below 1:2. Consider widening TP or tightening SL.';}
-  else{bar.className='verdict-bar bad';badge.className='verdict-badge badge-bad';badge.textContent='Poor Setup';txt.textContent='Risking more than you stand to gain. Move TP further or SL closer.';}
-}
+  // Indices: 1 point = $1 (NAS100/US500) or £1 (UK100) per contract
+  // For indices, pip value = pip size * contract size in quote ccy
+  const pipInQuote = pip * contract;
 
-['entry','sl','tp','balance','riskPct','lotType','convRate'].forEach(id=>{
-  document.getElementById(id).addEventListener('input',calc);
-});
-calc();
+  // Convert to USD
+  let pipInUSD;
+  if(quote === 'USD') pipInUSD = pipInQuote;
+  else if(quote === 'JPY') pipInUSD = pipInQuote / convRate;
+  else if(quote === 'GBP'||quote === 'AUD'||quote === 'NZD'||quote === 'EUR') pipInUSD = pipInQuote * convRate;
+  else if(quote === 'CAD'||quote === 'CHF') pipInUSD = pipInQuote / convRate;
+  else pipInUSD = pipInQuote;
 
-// ══ TA LOGIC ══
-const API_KEY = 'ab96b39d57894e4989b8746a06eef705';
-const TA_PAIRS = [
-  {symbol:'EUR/USD',id:'EURUSD'},{symbol:'GBP/USD',id:'GBPUSD'},
-  {symbol:'USD/JPY',id:'USDJPY'},{symbol:'AUD/USD',id:'AUDUSD'},
-  {symbol:'USD/CAD',id:'USDCAD'},{symbol:'NZD/USD',id:'NZDUSD'},
-  {symbol:'USD/CHF',id:'USDCHF'},{symbol:'XAU/USD',id:'XAUUSD'},
-];
-const INDS = [
-  {key:'rsi',  name:'RSI',  endpoint:'rsi',  params:'&time_period=14'},
-  {key:'macd', name:'MACD', endpoint:'macd', params:'&fast_period=12&slow_period=26&signal_period=9'},
-  {key:'ema20',name:'EMA20',endpoint:'ema',  params:'&time_period=20'},
-  {key:'ema50',name:'EMA50',endpoint:'ema',  params:'&time_period=50'},
-  {key:'stoch',name:'Stoch',endpoint:'stoch',params:'&fast_k_period=14&slow_d_period=3'},
-];
-let activeTF='5min', taLoaded=false, errorCount=0;
+  // If account is USD, done
+  if(acctCcy === 'USD') return pipInUSD;
 
-document.querySelectorAll('.tf-btn').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    document.querySelectorAll('.tf-btn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active'); activeTF=btn.dataset.tf; refreshAll();
-  });
-});
-
-function buildGrid() {
-  const grid=document.getElementById('pairGrid');
-  grid.innerHTML=''; errorCount=0;
-  document.getElementById('errorHint').style.display='none';
-  TA_PAIRS.forEach(p=>{
-    grid.innerHTML+=`
-      <div class="pair-card" id="card-${p.id}">
-        <div class="pair-card-top">
-          <div class="pair-card-name">${p.symbol}</div>
-          <div class="signal-pill pill-loading" id="pill-${p.id}">Loading…</div>
-        </div>
-        <div class="indicators">
-          ${INDS.map(ind=>`
-            <div class="ind-row">
-              <div class="ind-name">${ind.name}</div>
-              <div class="ind-bar-wrap"><div class="ind-bar skeleton" id="bar-${p.id}-${ind.key}" style="width:60%"></div></div>
-              <div class="ind-signal" id="sig-${p.id}-${ind.key}">—</div>
-            </div>`).join('')}
-        </div>
-        <div class="summary-row">
-          <div class="summary-item"><div class="summary-label">Buy</div><div class="summary-count count-buy" id="cnt-buy-${p.id}">—</div></div>
-          <div class="summary-item"><div class="summary-label">Neutral</div><div class="summary-count count-neu" id="cnt-neu-${p.id}">—</div></div>
-          <div class="summary-item"><div class="summary-label">Sell</div><div class="summary-count count-sell" id="cnt-sell-${p.id}">—</div></div>
-        </div>
-      </div>`;
-  });
-}
-
-async function fetchInd(symbol,ind,tf){
-  const url=`https://api.twelvedata.com/${ind.endpoint}?symbol=${encodeURIComponent(symbol)}&interval=${tf}${ind.params}&outputsize=2&apikey=${API_KEY}`;
-  return fetch(url).then(r=>r.json());
-}
-function interpRSI(v){const n=parseFloat(v);if(isNaN(n))return'neutral';if(n>=70)return'sell';if(n<=30)return'buy';if(n>55)return'sell';if(n<45)return'buy';return'neutral';}
-function interpMACD(d){const m=parseFloat(d?.values?.[0]?.macd),s=parseFloat(d?.values?.[0]?.macd_signal);if(isNaN(m)||isNaN(s))return'neutral';return m>s?'buy':m<s?'sell':'neutral';}
-function interpEMA(d,price){const e=parseFloat(d?.values?.[0]?.ema),p=parseFloat(price);if(isNaN(e)||isNaN(p))return'neutral';return p>e?'buy':p<e?'sell':'neutral';}
-function interpStoch(d){const k=parseFloat(d?.values?.[0]?.slow_k),s=parseFloat(d?.values?.[0]?.slow_d);if(isNaN(k)||isNaN(s))return'neutral';if(k>80)return'sell';if(k<20)return'buy';return k>s?'buy':k<s?'sell':'neutral';}
-
-function updateCard(pair,signals){
-  let buys=0,sells=0,neutrals=0;
-  signals.forEach(s=>{
-    const sigEl=document.getElementById(`sig-${pair.id}-${s.key}`);
-    const barEl=document.getElementById(`bar-${pair.id}-${s.key}`);
-    if(sigEl){sigEl.textContent=s.signal==='buy'?'Buy':s.signal==='sell'?'Sell':'Neutral';sigEl.className=`ind-signal sig-${s.signal}`;}
-    if(barEl){barEl.classList.remove('skeleton');barEl.className=`ind-bar bar-${s.signal}`;barEl.style.width=s.signal==='buy'?'82%':s.signal==='sell'?'18%':'50%';}
-    if(s.signal==='buy')buys++;else if(s.signal==='sell')sells++;else neutrals++;
-  });
-  document.getElementById(`cnt-buy-${pair.id}`).textContent=buys;
-  document.getElementById(`cnt-neu-${pair.id}`).textContent=neutrals;
-  document.getElementById(`cnt-sell-${pair.id}`).textContent=sells;
-  const card=document.getElementById(`card-${pair.id}`);
-  const pill=document.getElementById(`pill-${pair.id}`);
-  card.className='pair-card';
-  let overall,pillClass,cardClass;
-  if(buys>=4){overall='Strong Buy';pillClass='pill-strong-buy';cardClass='strong-buy';}
-  else if(buys>=3){overall='Buy';pillClass='pill-buy';cardClass='buy';}
-  else if(sells>=4){overall='Strong Sell';pillClass='pill-strong-sell';cardClass='strong-sell';}
-  else if(sells>=3){overall='Sell';pillClass='pill-sell';cardClass='sell';}
-  else{overall='Neutral';pillClass='pill-neutral';cardClass='neutral';}
-  card.classList.add(cardClass);pill.textContent=overall;pill.className=`signal-pill ${pillClass}`;
-}
-
-async function loadPair(pair){
-  try{
-    const priceUrl=`https://api.twelvedata.com/price?symbol=${encodeURIComponent(pair.symbol)}&apikey=${API_KEY}`;
-    const [pr,rsi,macd,ema20,ema50,stoch]=await Promise.all([
-      fetch(priceUrl).then(r=>r.json()),
-      fetchInd(pair.symbol,INDS[0],activeTF),fetchInd(pair.symbol,INDS[1],activeTF),
-      fetchInd(pair.symbol,INDS[2],activeTF),fetchInd(pair.symbol,INDS[3],activeTF),
-      fetchInd(pair.symbol,INDS[4],activeTF),
-    ]);
-    if(pr.status==='error'||rsi.status==='error') throw new Error('API error');
-    updateCard(pair,[
-      {key:'rsi',  signal:interpRSI(rsi?.values?.[0]?.rsi)},
-      {key:'macd', signal:interpMACD(macd)},
-      {key:'ema20',signal:interpEMA(ema20,pr?.price)},
-      {key:'ema50',signal:interpEMA(ema50,pr?.price)},
-      {key:'stoch',signal:interpStoch(stoch)},
-    ]);
-  }catch(e){
-    errorCount++;
-    const pill=document.getElementById(`pill-${pair.id}`);
-    if(pill){pill.textContent='Error';pill.className='signal-pill pill-error';}
-    if(errorCount>=2) document.getElementById('errorHint').style.display='block';
-  }
-}
-
-async function refreshAll(){
-  const btn=document.getElementById('refreshBtn');
-  btn.classList.add('spinning'); buildGrid();
-  for(let i=0;i<TA_PAIRS.length;i++){
-    loadPair(TA_PAIRS[i]);
-    if(i<TA_PAIRS.length-1) await new Promise(r=>setTimeout(r,800));
-  }
-  btn.classList.remove('spinning');
-  const now=new Date();
-  document.getElementById('lastUpdate').textContent=`Last updated: ${now.toLocaleTimeString()} · ${activeTF.toUpperCase()}`;
-}
-
-setInterval(()=>{ if(taLoaded) refreshAll(); }, 60000);
-
-// ══ SESSIONS LOGIC ══
-const SESS_DEF = {
-  sydney:  {open:21, close:6,  wrap:true },
-  tokyo:   {open:0,  close:9,  wrap:false},
-  london:  {open:8,  close:17, wrap:false},
-  newyork: {open:13, close:22, wrap:false},
-};
-
-// Build ruler 1-24
-(function(){
-  const ruler = document.getElementById('mhRuler');
-  if(!ruler) return;
-  for(let h=1;h<=24;h++){
-    const d=document.createElement('div');
-    d.className='mh-ruler-hr';
-    d.textContent=h;
-    ruler.appendChild(d);
-  }
-})();
-
-function isOpen(def,h,m){
-  const now=h*60+m;
-  return def.wrap ? (now>=def.open*60||now<def.close*60) : (now>=def.open*60&&now<def.close*60);
-}
-
-function setBar(id, startH, endH, open){
-  const el=document.getElementById(id);
-  if(!el) return;
-  const s=((startH/24)*100).toFixed(3)+'%';
-  const w=(((endH-startH)/24)*100).toFixed(3)+'%';
-  el.style.left=s; el.style.width=w;
-  el.className='mh-bar mh-bar-'+id.replace('bar-','').replace('-a','').replace('-b','').replace('2','')+(open?'':' dimmed');
-}
-
-function renderSessions(){
-  const now=new Date();
-  const H=now.getUTCHours(), M=now.getUTCMinutes(), S=now.getUTCSeconds();
-  const nowPct=(((H*3600+M*60+S)/86400)*100).toFixed(3)+'%';
-  const pad=n=>String(n).padStart(2,'0');
-
-  // Clocks
-  const e=id=>document.getElementById(id);
-  if(e('clockUTC'))  e('clockUTC').textContent=pad(H)+':'+pad(M)+':'+pad(S);
-  if(e('dateUTC'))   e('dateUTC').textContent=now.toUTCString().slice(0,16);
-  if(e('clockLocal'))e('clockLocal').textContent=now.toLocaleTimeString();
-  if(e('dateLocal')) e('dateLocal').textContent=now.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
-
-  // Sessions
-  Object.entries(SESS_DEF).forEach(([name,def])=>{
-    const open=isOpen(def,H,M);
-    const pill=e('pill-'+name);
-    if(pill){pill.textContent=open?'OPEN':'CLOSED';pill.className='mh-pill '+(open?'open':'closed');}
-
-    // Needle on each track
-    ['sydney','tokyo','london','newyork'].forEach(n=>{
-      const nd=e('needle-'+n);
-      if(nd) nd.style.left=nowPct;
-    });
-
-    // Bars
-    if(def.wrap){
-      // Two segments: open→24 and 0→close
-      const barA=e('bar-'+name+'-a');
-      const barB=e('bar-'+name+'-b');
-      if(barA){barA.style.left=((def.open/24)*100).toFixed(3)+'%';barA.style.width=(((24-def.open)/24)*100).toFixed(3)+'%';barA.className='mh-bar mh-bar-'+name+(open?'':' dimmed');}
-      if(barB){barB.style.left='0%';barB.style.width=((def.close/24)*100).toFixed(3)+'%';barB.className='mh-bar mh-bar-'+name+(open?'':' dimmed');}
-    } else {
-      const barA=e('bar-'+name+'-a');
-      if(barA){barA.style.left=((def.open/24)*100).toFixed(3)+'%';barA.style.width=(((def.close-def.open)/24)*100).toFixed(3)+'%';barA.className='mh-bar mh-bar-'+name+(open?'':' dimmed');}
-    }
-  });
-
-  // Set all needles to current time
-  ['sydney','tokyo','london','newyork'].forEach(n=>{
-    const nd=e('needle-'+n);
-    if(nd) nd.style.left=nowPct;
-  });
-
-  // Overlaps
-  const syd=isOpen(SESS_DEF.sydney,H,M);
-  const tok=isOpen(SESS_DEF.tokyo,H,M);
-  const lon=isOpen(SESS_DEF.london,H,M);
-  const ny=isOpen(SESS_DEF.newyork,H,M);
-  function setOv(id,active){const el=e(id);if(!el)return;el.textContent=active?'🔥 Active Now':'Inactive';el.className='overlap-badge '+(active?'ov-active':'ov-inactive');}
-  setOv('ov-syd-tok',syd&&tok);
-  setOv('ov-tok-lon',tok&&lon);
-  setOv('ov-lon-ny',lon&&ny);
-}
-
-renderSessions();
-setInterval(renderSessions,1000);
-</script>
-</body>
-</html>
+  // Convert USD pip value into account currency
+  const usdRates = { USD:1, GBP:0.79, EUR:0.92, AUD:1.53, CAD:1.37, JPY:150.5, NZD:1.65, CHF:0.91 };
+  const rate = usdRates[acctCcy] || 1;
+  if(acctCcy === 'GBP'||acctCcy === 'EUR'||acctCcy === 'AUD'||acctCcy === 'NZD') return pipInUSD * 
